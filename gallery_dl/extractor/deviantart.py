@@ -1338,22 +1338,29 @@ class DeviantartOAuthAPI():
             if unpack:
                 results = [item["journal"] for item in results
                            if "journal" in item]
-            if extend:
-                if public and len(results) < params["limit"]:
-                    if self.refresh_token_key:
-                        self.log.debug("Switching to private access token")
-                        public = False
-                        continue
-                    elif data["has_more"] and warn:
-                        warn = False
-                        self.log.warning(
-                            "Private deviations detected! Run 'gallery-dl "
-                            "oauth:deviantart' and follow the instructions to "
-                            "be able to access them.")
-                if self.metadata:
-                    self._metadata(results)
-                if self.folders:
-                    self._folders(results)
+
+            has_private = extend and public and len(results) < params["limit"]
+            if has_private and self.refresh_token_key:
+                self.log.debug("Switching to private access token")
+                public = False
+                continue
+            elif has_private and warn:
+                warn = False
+                # there's no way to tell if the last page contains private
+                # deviations or not
+                msg = "Private deviations detected!" if data["has_more"] else \
+                    ("End of pagination reached. gallery-dl cannot guarantee "
+                     "that there are no private deviations.")
+                self.log.warning(
+                    msg + " Run 'gallery-dl oauth:deviantart' and follow the "
+                    "instructions to be able to access them (an account is "
+                    "required).")
+
+            if extend and self.metadata:
+                self._metadata(results)
+            if extend and self.folders:
+                self._folders(results)
+
             yield from results
 
             if not data["has_more"] and (
