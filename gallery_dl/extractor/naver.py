@@ -11,8 +11,6 @@
 from .common import GalleryExtractor, Extractor, Message
 from .. import text
 from datetime import date
-import json
-import urllib.request
 
 class NaverBase():
     """Base class for naver extractors"""
@@ -86,14 +84,13 @@ class NaverPostExtractor(NaverBase, GalleryExtractor):
             # create list of json urls
             jsons = [f'https://apis.naver.com/rmcnmv/rmcnmv/vod/play/v2.0/{j}?key={k}' for j,k in zip(json_ids, keys)]
             for j in jsons:
-                with urllib.request.urlopen(j) as url:
-                    data = json.loads(url.read().decode())
+                data = self.request(j).json()
 
-                    # Parse source video urls and select highest quality source
-                    sources = data['videos']['list']
-                    sizes = [s['size'] for s in sources]
-                    i = sizes.index(max(sizes))
-                    videos.append((sources[i]['source'], None))
+                # Parse source video urls and select highest quality source
+                sources = data['videos']['list']
+                sizes = [s['size'] for s in sources]
+                i = sizes.index(max(sizes))
+                videos.append((sources[i]['source'], None))
 
         images = [
             (url.replace("://post", "://blog", 1).partition("?")[0], None)
