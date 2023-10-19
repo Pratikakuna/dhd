@@ -62,7 +62,8 @@ class NaverPostExtractor(NaverBase, GalleryExtractor):
 
         # fixes directory error for posts created less than 24 hours ago
         if "전" in str(data["post"]["date"]):
-            data["post"]["date"] = text.parse_datetime(date.today().isoformat(), format="%Y-%m-%d")
+            td = date.today().isoformat()
+            data["post"]["date"] = text.parse_datetime(td, format="%Y-%m-%d")
 
         return data
 
@@ -79,10 +80,12 @@ class NaverPostExtractor(NaverBase, GalleryExtractor):
             json_ids = text.extr(page, "likeItVideoIdListJson = '", "'")
 
             # convert to list
-            json_ids = json_ids.strip('[]').replace('"', '').replace(' ', '').split(',')
+            json_ids = json_ids.strip('[]').replace('"', '') \
+                        .replace(' ', '').split(',')
             
             # create list of json urls
-            jsons = [f'https://apis.naver.com/rmcnmv/rmcnmv/vod/play/v2.0/{j}?key={k}' for j,k in zip(json_ids, keys)]
+            json_base = f'https://apis.naver.com/rmcnmv/rmcnmv/vod/play/v2.0/'
+            jsons = [f'{json_base}{j}?key={k}' for j,k in zip(json_ids, keys)]
             for j in jsons:
                 data = self.request(j).json()
 
