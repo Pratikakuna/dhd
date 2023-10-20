@@ -78,15 +78,19 @@ class NaverPostExtractor(NaverBase, GalleryExtractor):
 
         if keys:
             # grab json ids
-            json_id_str = text.extr(page, "likeItVideoContentsIdMapJson = '", "'")
+            json_base = f'https://apis.naver.com/rmcnmv/rmcnmv/vod/play/v2.0/'
+            json_id_str = text.extr(page, 
+            "likeItVideoContentsIdMapJson = '", "'")
+            
 
             if json_id_str:
                 json_dict = json.loads(json_id_str)
                 json_ids = json_dict.keys()
 
                 # create list of json urls
-                json_base = f'https://apis.naver.com/rmcnmv/rmcnmv/vod/play/v2.0/'
-                jsons = [f'{json_base}{j}?key={k}' for j,k in zip(json_ids, keys)]
+                jsons = [f'{json_base}{j}?key={k}' 
+                for j,k in zip(json_ids, keys)]
+                
                 for j in jsons:
                     
                     data = self.request(j).json()
