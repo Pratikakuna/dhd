@@ -11,6 +11,7 @@
 from .common import GalleryExtractor, Extractor, Message
 from .. import text
 from datetime import date
+import json
 
 class NaverBase():
     """Base class for naver extractors"""
@@ -77,23 +78,24 @@ class NaverPostExtractor(NaverBase, GalleryExtractor):
 
         if keys:
             # grab json ids
-            json_ids = text.extr(page, "likeItVideoIdListJson = '", "'")
+            json_id_str = text.extr(page, "likeItVideoContentsIdMapJson = '", "'")
 
-            # convert to list
-            json_ids = json_ids.strip('[]').replace('"', '') \
-                        .replace(' ', '').split(',')
-            
-            # create list of json urls
-            json_base = f'https://apis.naver.com/rmcnmv/rmcnmv/vod/play/v2.0/'
-            jsons = [f'{json_base}{j}?key={k}' for j,k in zip(json_ids, keys)]
-            for j in jsons:
-                data = self.request(j).json()
+            if json_id_str:
+                json_dict = json.loads(json_id_str)
+                json_ids = json_dict.keys()
 
-                # Parse source video urls and select highest quality source
-                sources = data['videos']['list']
-                sizes = [s['size'] for s in sources]
-                i = sizes.index(max(sizes))
-                videos.append((sources[i]['source'], None))
+                # create list of json urls
+                json_base = f'https://apis.naver.com/rmcnmv/rmcnmv/vod/play/v2.0/'
+                jsons = [f'{json_base}{j}?key={k}' for j,k in zip(json_ids, keys)]
+                for j in jsons:
+                    
+                    data = self.request(j).json()
+
+                    # Parse source video urls and select highest quality source
+                    sources = data['videos']['list']
+                    sizes = [s['size'] for s in sources]
+                    i = sizes.index(max(sizes))
+                    videos.append((sources[i]['source'], None))
 
         images = [
             (url.replace("://post", "://blog", 1).partition("?")[0], None)
