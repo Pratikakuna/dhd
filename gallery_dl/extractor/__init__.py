@@ -49,6 +49,7 @@ modules = [
     "erome",
     "everia",
     "exhentai",
+    "facebook",
     "fanbox",
     "fanleaks",
     "fantia",
